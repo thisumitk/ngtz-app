@@ -40,6 +40,9 @@ export function useLogs(from?: string, to?: string) {
 
   const setStatus = useCallback(
     async (habitId: string, date: string, status: LogStatus | null) => {
+      // Snapshot for rollback
+      const previousMap = logMap;
+
       // Optimistic update
       setLogMap((prev) => {
         const updated = { ...prev };
@@ -59,13 +62,18 @@ export function useLogs(from?: string, to?: string) {
       });
 
       // Persist
-      await fetch("/api/logs", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ habitId, date, status }),
-      });
+      try {
+        const res = await fetch("/api/logs", {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ habitId, date, status }),
+        });
+        if (!res.ok) throw new Error("Failed to save");
+      } catch {
+        setLogMap(previousMap);
+      }
     },
-    []
+    [logMap]
   );
 
   return { logs, logMap, loading, setStatus, refetch: fetchLogs };

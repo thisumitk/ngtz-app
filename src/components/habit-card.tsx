@@ -6,6 +6,7 @@ import { Pencil, Trash2, ChevronDown, ChevronRight } from "lucide-react";
 import type { Habit, LogStatus } from "@/lib/db/schema";
 import { StatusButton, StatusLabel } from "./status-button";
 import { MiniCalendar } from "./mini-calendar";
+import { getLocalDateStr } from "@/lib/date";
 
 interface Props {
   habit: Habit;
@@ -16,7 +17,7 @@ interface Props {
 }
 
 function getToday() {
-  return new Date().toISOString().slice(0, 10);
+  return getLocalDateStr();
 }
 
 function calcStreak(logMap: Record<string, Record<string, LogStatus>>, habitId: string): number {
@@ -29,7 +30,7 @@ function calcStreak(logMap: Record<string, Record<string, LogStatus>>, habitId: 
   }
 
   while (true) {
-    const key = d.toISOString().slice(0, 10);
+    const key = getLocalDateStr(d);
     const status = logMap[key]?.[habitId];
     if (status === "green" || status === "yellow") {
       streak++;
@@ -54,6 +55,7 @@ function calcStats(logMap: Record<string, Record<string, LogStatus>>, habitId: s
 
 export function HabitCard({ habit, logMap, onStatusChange, onEdit, onDelete }: Props) {
   const [showCalendar, setShowCalendar] = useState(false);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
   const todayStr = getToday();
   const currentStatus = logMap[todayStr]?.[habit.id] || null;
   const streak = useMemo(() => calcStreak(logMap, habit.id), [logMap, habit.id]);
@@ -93,12 +95,30 @@ export function HabitCard({ habit, logMap, onStatusChange, onEdit, onDelete }: P
           >
             <Pencil size={14} />
           </button>
-          <button
-            onClick={() => onDelete(habit.id)}
-            className="p-2 text-[#444] hover:text-ngtz-red transition-colors"
-          >
-            <Trash2 size={14} />
-          </button>
+          {confirmingDelete ? (
+            <div className="flex items-center gap-1.5">
+              <span className="text-[11px] text-ngtz-red font-mono">Delete?</span>
+              <button
+                onClick={() => { onDelete(habit.id); setConfirmingDelete(false); }}
+                className="px-2 py-1 text-[11px] font-mono text-ngtz-red border border-ngtz-red/30 rounded hover:bg-ngtz-red/10 transition-colors"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmingDelete(false)}
+                className="px-2 py-1 text-[11px] font-mono text-[#666] border border-ngtz-border rounded hover:border-[#333] transition-colors"
+              >
+                No
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              className="p-2 text-[#444] hover:text-ngtz-red transition-colors"
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
         </div>
       </div>
 

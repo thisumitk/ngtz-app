@@ -3,6 +3,7 @@ import { db } from "@/lib/db";
 import { dailyLogs, habits } from "@/lib/db/schema";
 import { eq, and, gte, lte, sql, desc } from "drizzle-orm";
 import { getAuthUser, unauthorized } from "@/lib/session";
+import { getLocalDateStr, getLocalDateStrDaysAgo } from "@/lib/date";
 
 // GET /api/analytics?range=week|month|quarter|year&from=...&to=...
 export async function GET(req: NextRequest) {
@@ -12,35 +13,22 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const range = searchParams.get("range") || "month";
 
-  const now = new Date();
   let from: string;
-  let to: string = now.toISOString().slice(0, 10);
+  let to: string = getLocalDateStr();
 
   switch (range) {
-    case "week": {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 6);
-      from = d.toISOString().slice(0, 10);
+    case "week":
+      from = getLocalDateStrDaysAgo(6);
       break;
-    }
-    case "month": {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 29);
-      from = d.toISOString().slice(0, 10);
+    case "month":
+      from = getLocalDateStrDaysAgo(29);
       break;
-    }
-    case "quarter": {
-      const d = new Date(now);
-      d.setDate(d.getDate() - 89);
-      from = d.toISOString().slice(0, 10);
+    case "quarter":
+      from = getLocalDateStrDaysAgo(89);
       break;
-    }
-    case "year": {
-      const d = new Date(now);
-      d.setFullYear(d.getFullYear() - 1);
-      from = d.toISOString().slice(0, 10);
+    case "year":
+      from = getLocalDateStrDaysAgo(365);
       break;
-    }
     default:
       from = searchParams.get("from") || to;
   }
@@ -91,6 +79,7 @@ export async function GET(req: NextRequest) {
     .from(habits)
     .where(eq(habits.userId, user.id));
 
+  const oneYearAgoStr = getLocalDateStrDaysAgo(365);
   const allLogs = await db
     .select({
       habitId: dailyLogs.habitId,
@@ -98,7 +87,7 @@ export async function GET(req: NextRequest) {
       status: dailyLogs.status,
     })
     .from(dailyLogs)
-    .where(eq(dailyLogs.userId, user.id))
+    .where(and(eq(dailyLogs.userId, user.id), gte(dailyLogs.date, oneYearAgoStr)))
     .orderBy(desc(dailyLogs.date));
 
   // Calculate current streak per habit
@@ -116,7 +105,7 @@ export async function GET(req: NextRequest) {
     // Current streak
     let streak = 0;
     const d = new Date();
-    const todayStr = d.toISOString().slice(0, 10);
+    const todayStr = getLocalDateStr(d);
     let checkDate = new Date(d);
 
     // If today not logged, start from yesterday
@@ -125,7 +114,7 @@ export async function GET(req: NextRequest) {
     }
 
     while (true) {
-      const key = checkDate.toISOString().slice(0, 10);
+      const key = getLocalDateStr(checkDate);
       const status = logMap.get(key);
       if (status === "green" || status === "yellow") {
         streak++;

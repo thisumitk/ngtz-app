@@ -4,6 +4,7 @@ import { useState } from "react";
 import { clsx } from "clsx";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { LogStatus } from "@/lib/db/schema";
+import { getLocalDateStr } from "@/lib/date";
 
 const MONTH_NAMES = [
   "January", "February", "March", "April", "May", "June",
@@ -30,7 +31,7 @@ export function MiniCalendar({ logMap, habitId, onToggle }: Props) {
 
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const firstDay = new Date(year, month, 1).getDay();
-  const todayStr = now.toISOString().slice(0, 10);
+  const todayStr = getLocalDateStr(now);
 
   const prevMonth = () => {
     if (month === 0) { setMonth(11); setYear((y) => y - 1); }

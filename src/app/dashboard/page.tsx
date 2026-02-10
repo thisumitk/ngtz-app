@@ -10,6 +10,7 @@ import { HabitForm } from "@/components/habit-form";
 import { useHabits } from "@/hooks/use-habits";
 import { useLogs } from "@/hooks/use-logs";
 import type { Habit, LogStatus } from "@/lib/db/schema";
+import { getLocalDateStr, getLocalDateStrDaysAgo } from "@/lib/date";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
@@ -17,19 +18,15 @@ export default function DashboardPage() {
   const [editingHabit, setEditingHabit] = useState<Habit | null>(null);
 
   // Load logs for past 90 days (covers calendar navigation)
-  const from = useMemo(() => {
-    const d = new Date();
-    d.setDate(d.getDate() - 90);
-    return d.toISOString().slice(0, 10);
-  }, []);
-  const to = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const from = useMemo(() => getLocalDateStrDaysAgo(90), []);
+  const to = useMemo(() => getLocalDateStr(), []);
 
   const { habits, loading: habitsLoading, createHabit, updateHabit, deleteHabit } = useHabits();
   const { logMap, loading: logsLoading, setStatus } = useLogs(from, to);
 
   if (status === "unauthenticated") redirect("/login");
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = getLocalDateStr();
   const todayDone = habits.filter((h) => {
     const s = logMap[todayStr]?.[h.id];
     return s === "green" || s === "yellow";

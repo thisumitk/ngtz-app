@@ -15,6 +15,18 @@ export async function PATCH(
   const body = await req.json();
   const { name, icon, vFull, vMin, sortOrder } = body;
 
+  if (
+    (name !== undefined && name.length > 100) ||
+    (icon !== undefined && icon.length > 10) ||
+    (vFull !== undefined && vFull.length > 500) ||
+    (vMin !== undefined && vMin.length > 500)
+  ) {
+    return NextResponse.json(
+      { error: "Input too long" },
+      { status: 400 }
+    );
+  }
+
   const updates: Record<string, unknown> = { updatedAt: new Date() };
   if (name !== undefined) updates.name = name;
   if (icon !== undefined) updates.icon = icon;

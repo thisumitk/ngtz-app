@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { habits } from "@/lib/db/schema";
-import { eq, asc, isNull } from "drizzle-orm";
+import { eq, and, asc, isNull } from "drizzle-orm";
 import { getAuthUser, unauthorized } from "@/lib/session";
 
 // GET /api/habits — list all active habits for user
@@ -12,13 +12,10 @@ export async function GET() {
   const result = await db
     .select()
     .from(habits)
-    .where(eq(habits.userId, user.id))
+    .where(and(eq(habits.userId, user.id), isNull(habits.archived)))
     .orderBy(asc(habits.sortOrder), asc(habits.createdAt));
 
-  // Filter out archived in app layer for flexibility
-  const active = result.filter((h) => !h.archived);
-
-  return NextResponse.json(active);
+  return NextResponse.json(result);
 }
 
 // POST /api/habits — create a new habit
@@ -32,6 +29,18 @@ export async function POST(req: NextRequest) {
   if (!name || !vFull || !vMin) {
     return NextResponse.json(
       { error: "name, vFull, vMin are required" },
+      { status: 400 }
+    );
+  }
+
+  if (
+    name.length > 100 ||
+    (icon && icon.length > 10) ||
+    vFull.length > 500 ||
+    vMin.length > 500
+  ) {
+    return NextResponse.json(
+      { error: "Input too long" },
       { status: 400 }
     );
   }

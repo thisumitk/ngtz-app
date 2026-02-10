@@ -32,6 +32,7 @@ export function HabitForm({ habit, onSave, onCancel }: Props) {
           value={icon}
           onChange={(e) => setIcon(e.target.value)}
           placeholder="🎯"
+          maxLength={10}
           className="w-14 px-2.5 py-2.5 bg-[#111] border border-ngtz-border rounded-lg
                      text-center text-xl font-mono text-gray-200 outline-none
                      focus:border-[#333] transition-colors"
@@ -40,6 +41,7 @@ export function HabitForm({ habit, onSave, onCancel }: Props) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Habit name"
+          maxLength={100}
           className="flex-1 px-3 py-2.5 bg-[#111] border border-ngtz-border rounded-lg
                      text-sm font-mono text-gray-200 outline-none
                      focus:border-[#333] transition-colors"
@@ -50,6 +52,7 @@ export function HabitForm({ habit, onSave, onCancel }: Props) {
         value={vFull}
         onChange={(e) => setVFull(e.target.value)}
         placeholder="Version 1.0 — Full version (e.g. 45 min workout)"
+        maxLength={500}
         className="w-full px-3 py-2.5 mb-2.5 bg-[#111] border border-ngtz-border rounded-lg
                    text-sm font-mono text-gray-200 outline-none
                    focus:border-[#333] transition-colors"
@@ -59,6 +62,7 @@ export function HabitForm({ habit, onSave, onCancel }: Props) {
         value={vMin}
         onChange={(e) => setVMin(e.target.value)}
         placeholder="Version 0.1 — Too small to fail (e.g. 10 pushups)"
+        maxLength={500}
         className="w-full px-3 py-2.5 mb-4 bg-[#111] border border-ngtz-border rounded-lg
                    text-sm font-mono text-gray-200 outline-none
                    focus:border-[#333] transition-colors"

@@ -4,7 +4,7 @@ import { useSession, signOut } from "next-auth/react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { clsx } from "clsx";
-import { BarChart3, LayoutGrid, LogOut } from "lucide-react";
+import { BarChart3, LayoutGrid, LogOut, Settings } from "lucide-react";
 
 export function Navbar() {
   const { data: session } = useSession();
@@ -15,6 +15,7 @@ export function Navbar() {
   const links = [
     { href: "/dashboard", label: "Track", icon: LayoutGrid },
     { href: "/analytics", label: "Analytics", icon: BarChart3 },
+    { href: "/settings", label: "Settings", icon: Settings },
   ];
 
   return (

@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url("https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=JetBrains+Mono:wght@300;400;500;700&display=swap");
+
+:root {
+  --bg: #080808;
+  --card: #0d0d0d;
+  --border: #1a1a1a;
+  --green: #22c55e;
+  --yellow: #eab308;
+  --red: #ef4444;
+  --muted: #555;
+}
+
+body {
+  background: var(--bg);
+  color: #e5e5e5;
+}
+
+/* Subtle scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+::-webkit-scrollbar-thumb {
+  background: #222;
+  border-radius: 3px;
+}
+
+/* Status dot pulse on active */
+@keyframes status-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.6;
+  }
+}
+
+.status-active {
+  animation: status-pulse 2s ease-in-out infinite;
+}

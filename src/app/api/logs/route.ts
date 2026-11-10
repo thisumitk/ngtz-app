@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { dailyLogs } from "@/lib/db/schema";
-import { eq, and, gte, lte, sql } from "drizzle-orm";
+import { dailyLogs, habits } from "@/lib/db/schema";
+import { eq, and, gte, lte } from "drizzle-orm";
 import { getAuthUser, unauthorized } from "@/lib/session";
 
 // GET /api/logs?from=2025-01-01&to=2025-01-31
@@ -41,6 +41,18 @@ export async function PUT(req: NextRequest) {
       { error: "habitId and date are required" },
       { status: 400 }
     );
+  }
+
+  // A log's user and habit must have the same owner. Check before either
+  // mutation, including writes to any inconsistent rows created previously.
+  const [habit] = await db
+    .select({ id: habits.id })
+    .from(habits)
+    .where(and(eq(habits.id, habitId), eq(habits.userId, user.id)))
+    .limit(1);
+
+  if (!habit) {
+    return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
   // Delete case

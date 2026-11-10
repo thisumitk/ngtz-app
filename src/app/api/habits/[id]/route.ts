@@ -7,10 +7,12 @@ import { getAuthUser, unauthorized } from "@/lib/session";
 // PATCH /api/habits/[id] — update habit
 export async function PATCH(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getAuthUser();
   if (!user) return unauthorized();
+
+  const { id } = await params;
 
   const body = await req.json();
   const { name, icon, vFull, vMin, sortOrder } = body;
@@ -37,7 +39,7 @@ export async function PATCH(
   const [updated] = await db
     .update(habits)
     .set(updates)
-    .where(and(eq(habits.id, params.id), eq(habits.userId, user.id)))
+    .where(and(eq(habits.id, id), eq(habits.userId, user.id)))
     .returning();
 
   if (!updated) {
@@ -50,15 +52,17 @@ export async function PATCH(
 // DELETE /api/habits/[id] — soft delete (archive)
 export async function DELETE(
   _req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const user = await getAuthUser();
   if (!user) return unauthorized();
 
+  const { id } = await params;
+
   const [archived] = await db
     .update(habits)
     .set({ archived: new Date(), updatedAt: new Date() })
-    .where(and(eq(habits.id, params.id), eq(habits.userId, user.id)))
+    .where(and(eq(habits.id, id), eq(habits.userId, user.id)))
     .returning();
 
   if (!archived) {

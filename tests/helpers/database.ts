@@ -3,7 +3,7 @@ import { drizzle } from "drizzle-orm/pglite";
 import { createRequire } from "node:module";
 import * as schema from "@/lib/db/schema";
 
-// drizzle-kit 0.24 bundles CommonJS dependencies; use its CommonJS entry point.
+// drizzle-kit bundles CommonJS dependencies; use its CommonJS entry point.
 const { generateDrizzleJson, generateMigration } = createRequire(import.meta.url)(
   "drizzle-kit/api"
 ) as typeof import("drizzle-kit/api");

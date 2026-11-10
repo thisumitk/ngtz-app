@@ -7,7 +7,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["tests/**/*.test.ts"],
+    include: ["tests/**/*.test.{ts,tsx}"],
     hookTimeout: 30_000,
+    // Each database suite boots PostgreSQL; bound memory on small CI runners.
+    maxWorkers: 2,
   },
 });

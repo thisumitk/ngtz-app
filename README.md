@@ -19,12 +19,12 @@ The main engineering concerns are authenticated ownership, repeatable writes, an
 
 | Layer | Implementation |
 | --- | --- |
-| Web | Next.js 14 App Router, React 18, TypeScript |
+| Web | Next.js 16 App Router, React 19, TypeScript |
 | Data | PostgreSQL on Neon, Drizzle ORM |
 | Authentication | NextAuth.js, Google and GitHub OAuth |
 | UI | Tailwind CSS, Recharts |
 | Tests | Vitest, PGlite (PostgreSQL running locally in WebAssembly) |
-| CI | GitHub Actions: type checking, tests, production build |
+| CI | GitHub Actions: production audit, type checking, tests, build, HTTP smoke |
 
 ## Run locally
 
@@ -80,7 +80,7 @@ Next.js route handlers
 
 - `src/app/api/`: authentication, habits, daily logs, analytics, and account handlers.
 - `src/lib/db/schema.ts`: NextAuth tables plus `habits` and `daily_logs`.
-- `src/lib/session.ts`: server-side session lookup. Middleware checks for a cookie to redirect pages; it is not the authorization boundary.
+- `src/lib/session.ts`: server-side session lookup. The page proxy checks for a cookie to redirect pages; it is not the authorization boundary.
 - `src/hooks/`: client data loading and optimistic status updates.
 - `src/components/`: habit cards, forms, calendar, navigation, and status buttons.
 - `tests/`: route integration tests and local-date tests.
@@ -126,11 +126,12 @@ A status write looks like:
 npm run typecheck
 npm test
 npm run build
-# or all three, in order:
+npm run test:smoke
+# or all four, in order:
 npm run check
 ```
 
-The build needs a syntactically valid `DATABASE_URL` even when it does not query a live database. For a build-only check, use the placeholders in `.github/workflows/ci.yml`; these are not interactive-development credentials.
+The dev and build commands explicitly use Webpack. The build needs a syntactically valid `DATABASE_URL` even when it does not query a live database. For a build-only check, use the placeholders in `.github/workflows/ci.yml`; these are not interactive-development credentials.
 
 The log tests call the real Next.js `GET` and `PUT` handlers and execute real Drizzle SQL against isolated in-memory PostgreSQL. Only the authenticated identity and database connection are substituted. Test DDL is generated from the application schema. No test connects to `DATABASE_URL` or modifies a deployed database.
 
@@ -142,8 +143,10 @@ Coverage includes:
 - Owned create/update/retry/clear flows, optional notes, and ignoring a caller-supplied user ID.
 - Archived-habit history, required fields, status validation, and inclusive date filters.
 - Local date formatting, leap days, and year boundaries.
+- Async route parameters, adapter methods, database-session renewal/expiry, and the production Neon driver with intercepted HTTP.
+- React 19 chart server rendering and 13 local production HTTP smoke checks.
 
-These tests verify the route/database boundary, not a real OAuth exchange, browser interaction, the Neon transport, or production traffic. There is no dedicated lint configuration or browser end-to-end suite yet.
+These tests verify route/database boundaries and a mocked Neon HTTP protocol, not a real OAuth exchange, browser interaction, live Neon transport, or production traffic. There is no dedicated lint configuration or browser end-to-end suite yet.
 
 ## Current limits
 
@@ -153,7 +156,7 @@ These tests verify the route/database boundary, not a real OAuth exchange, brows
 - Rapid overlapping optimistic updates are not covered by browser concurrency tests.
 - Both OAuth providers currently enable automatic linking by matching email. Review provider email-verification guarantees and the desired linking policy before using this for sensitive accounts.
 - Generated migration files are currently ignored. The existing `db:generate` / `db:migrate` commands need a reviewed, versioned migration workflow before production schema changes.
-- No load-test results, uptime guarantee, dependency-security audit clearance, or live deployment verification is claimed here.
+- No load-test results, uptime guarantee, or live deployment verification is claimed here. The [dependency review](docs/dependency-security.md) records the current production audit, remaining development-tool findings, and upgrade validation limits.
 
 ## The principle
 
